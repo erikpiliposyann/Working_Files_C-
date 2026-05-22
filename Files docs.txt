@@ -1,0 +1,230 @@
+1)Իրականացնել ծրագիր, որը կբացի a.txt ֆայլը, կկարդա ամբողջ պարունակությունը, կհաշվի ֆայլում թվանշանների քանակը և պատասխանը կտեղադրի b.txt ֆայլում։
+
+#include <stdio.h>
+#include <fcntl.h>
+#include <unistd.h>
+#define BUFFSIZE 1024
+
+int main(){
+	int w_fd = open("./b.txt",O_WRONLY);
+	
+	if (w_fd == -1) {
+        printf("b.txt doesn't open\n");
+        return 1;
+    }
+
+	int r_fd = open("./a.txt",O_RDONLY);
+	
+	
+    if (r_fd == -1) {
+        printf("a.txt doesn't open\n");
+        return 1;
+    }
+
+	char buff[BUFFSIZE] = {0};
+	int sizebuff = 0;
+	int count = 0;
+	while((sizebuff = read(r_fd,buff,BUFFSIZE)) > 0){
+		for(int i = 0; i < sizebuff; ++i){
+			if(buff[i] >= '0' && buff[i] <= '9'){
+				count++;
+			}						
+		}
+	}
+	char result[20];
+	int len = sprintf(result, "%d\n", count);
+	write(w_fd, result, len);
+	
+	close(r_fd);
+	close(w_fd);
+	return 0;
+}
+
+2)Գրել ծրագիր, որը կտպի էկրանին ֆայլի մասին ինֆորմացիա.
+	Ֆայլի չափը՝ բայթերով
+	Ֆայլի մեջ տողերի քանակը
+	Յուրաքանչյուր սիմվոլի քանակը
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+
+#define BUFFSIZE 1024
+
+char buf[BUFFSIZE];
+
+int main() {
+    FILE* stream = fopen("./filee.txt", "r");
+
+    if (stream == NULL) {
+        printf("File doesn't open\n");
+        return 1;
+    }
+
+    fseek(stream, 0, SEEK_END);
+    int size = ftell(stream);
+    fseek(stream, 0, SEEK_SET);
+
+    printf("The size of file is: %d\n", size);
+
+    int lines = 0;
+
+    while (fgets(buf, BUFFSIZE, stream) != NULL) {
+        lines++;
+    }
+
+    printf("The line count of file is: %d\n", lines);
+
+    fseek(stream, 0, SEEK_SET);
+
+    char* buffer = calloc(size + 1, sizeof(char));
+
+    if (buffer == NULL) {
+        printf("Memory allocation failed\n");
+        fclose(stream);
+        return 1;
+    }
+
+    fread(buffer, sizeof(char), size, stream);
+
+    int count[26] = {0};
+
+    for (int i = 0; i < size; ++i) {
+        if (buffer[i] >= 'a' && buffer[i] <= 'z') {
+            count[buffer[i] - 'a']++;
+        }
+    }
+
+    for (int i = 0; i < 26; ++i) {
+        printf("%c -> %d\n", 'a' + i, count[i]);
+    }
+
+    free(buffer);
+    fclose(stream);
+
+    return 0;
+}
+
+3)Իրականացնել ծրագիր, որը կբացի a.txt ֆայլը, կկարդա ամբողջ պարունակությունը, կհաշվի ֆայլում բառերի քանակը և պատասխանը կտպի էկրանին:
+
+#include <stdio.h>
+#include <ctype.h>
+#include <limits.h>
+#define BUFFSIZE 1024
+
+char buf[BUFFSIZE];
+
+int main(){
+	FILE* stream = fopen("./a.txt", "r");
+	
+	if (stream == NULL) {
+        printf("File doesn't open\n");
+        return 1;
+    }
+	int count_of_word = 0;
+	int in_the_word = 0;
+
+	while(fgets(buf, BUFFSIZE, stream) != NULL) {
+		for(int i = 0; buf[i] != '\0'; ++i){
+			if(isspace((unsigned char)buf[i])){
+				in_the_word = 0;
+			}
+			else{
+				if(in_the_word == 0){
+					count_of_word++;
+					in_the_word = 1;
+				}
+			}
+		}
+	}
+	printf("Count of words is %d\n", count_of_word);
+	fclose(stream);
+
+	return 0;
+}
+
+4)Իրականացնել ծրագիր, որը մուտքագրում է թիվ, հաշվում 1-ից մինչև այդ մուտքագրված թվի ֆակտորիալները և տեղադրում factorials.txt ֆայլում, անջատելով ստորակետներով։ Օրինակ՝
+input - 5
+Factorials.txt - 1, 2, 6, 24, 120
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+
+
+int factorial(int);
+
+int main(){
+	FILE* stream = fopen("factorials.txt", "w");
+
+	if (stream == NULL) {
+        printf("File doesn't open\n");
+        return 1;
+    }
+
+	int n = 0;
+	printf("Input your number.");
+	scanf("%i", &n);
+	
+	for(int i = 0; i <= n; ++i){
+		fprintf(stream, "%d", factorial(i));
+
+        if (i != n) {
+            fprintf(stream, ", ");
+        }
+	}
+	fclose(stream);
+	return 0;
+}
+
+int factorial(int n){
+	if(n == 1 || n == 0){
+		return 1;
+	}
+
+	return n * factorial(n-1);
+}
+
+5)Իրականացնել ծրագիր, որը կբացի երկու ֆայլ՝ a.txt և b.txt։ b.txt ֆայլում գրել a.txt ֆայլի պարունակությունը շրջված՝ reverse արված։
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+
+int main(){
+	FILE* stream1 = fopen("a.txt", "r");
+	FILE* stream2 = fopen("b.txt", "w");
+	
+	if (stream1 == NULL) {
+        printf("File doesn't open\n");
+        return 1;
+    }
+	if (stream2 == NULL){ 
+		printf("File doesn't open\n");
+        fclose(stream1);
+		return 1;
+    }
+	
+	fseek(stream1, 0, SEEK_END);
+    int size = ftell(stream1);
+    fseek(stream1, 0, SEEK_SET);
+	
+	char* buffer = calloc(size + 1, sizeof(char));
+	
+	if (buffer == NULL) {
+   		printf("Memory allocation failed\n");
+    	fclose(stream1);
+    	fclose(stream2);
+    	return 1;
+	}
+	fread(buffer, sizeof(char), size, stream1);
+	
+	for(int i = size - 1; i >= 0; --i){
+		fprintf(stream2, "%c", buffer[i]);
+	}
+
+	fclose(stream1);
+	fclose(stream2);
+	free(buffer);
+
+	return 0;
+}
+
